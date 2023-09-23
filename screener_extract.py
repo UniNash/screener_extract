@@ -284,31 +284,38 @@ for company in search_list_final:
             item='0'
         cpg_ratio_items.append(item)
     cpg_ratios = [cpg_ratio_items[0],cpg_ratio_items[2],cpg_ratio_items[4],cpg_ratio_items[6]] #get cpg ratios from items array
-    cpg_values = [cpg_ratio_items[1],cpg_ratio_items[3],cpg_ratio_items[5],cpg_ratio_items[7]] #get cpg values from items array
+    cpg_values = [float(cpg_ratio_items[1]),float(cpg_ratio_items[3]),float(cpg_ratio_items[5]),float(cpg_ratio_items[7])] #get cpg values from items array
     default_ratio_items.extend(quick_ratio_items)
     default_ratio_values.extend(quick_ratio_values)
     #actual_ratios = ['Trigger']
+    
     actual_ratios = []
     for item in default_ratio_items:
         item=(item.string).replace('\n','').strip()
         actual_ratios.append(item)
     actual_ratios.extend(cpg_ratios)
     #actual_values=[company]
+    
     actual_values=[]
     for value in default_ratio_values:
         value = value.string
         if ((value==None) or (value=='')):
             value = '0.00'
         value = value.replace('\n','').strip()
-        actual_values.append(value)
+        value = value.replace(',','')
+        actual_values.append(float(value))
     actual_values.extend(cpg_values)
+    
+    #print(actual_values)
+              
     if "High / Low" in actual_ratios:
         HL_index = actual_ratios.index("High / Low")
         #print("Item no. {} contains H/L".format(HL_index+1) )
         #print(actual_values[HL_index],actual_values[HL_index+1])
-        actual_values.insert(HL_index,actual_values[HL_index]+"/"+actual_values[HL_index+1])
+        actual_values.insert(HL_index,str(actual_values[HL_index])+"/"+str(actual_values[HL_index+1]))
         actual_values.pop(HL_index+1)
         actual_values.pop(HL_index+1)
+        
     ratio_value = {}
     for i in range(0,len(actual_ratios)):
         for ratio in required_ratios:
