@@ -67,6 +67,8 @@ print("-------------------------------------------------------------------------
 
 try:
     actual_file = pd.read_excel(file_path)
+    to_path = file_path[0:len(file_path)-5]+"_"+"backed_up_on"+str(dt.today().date())+".xlsx"
+    actual_file.to_excel(to_path)
     print("------------------------------------------------------------------------------")
     print("File successfuly uploaded.")
     print("------------------------------------------------------------------------------")
@@ -184,8 +186,13 @@ for company in search_list_final:
     default_ratio_values = default_ratio_section.select(".number") #get the default ratio values from webpage above (with html tags)
     
     #quick ratios
+        #---old code---
+    '''
     datawarehouseid_tag=parse_web_page_data.main.div
     datawarehouseid = datawarehouseid_tag['data-warehouse-id'] #get warehouse id
+    '''
+        # new code
+    datawarehouseid  = parse_web_page_data.find_all("div", id="company-info")[0]["data-warehouse-id"]
     
     if (datawarehouseid=='None'):
         url_extn = 'company/'+company+'/'
@@ -211,8 +218,13 @@ for company in search_list_final:
             get_webpage=s.get(os.path.join(main_url,url_extn))
     
     parse_web_page_data = BeautifulSoup(get_webpage.content, 'html.parser')
+        #---old code---
+    '''
     datawarehouseid_tag=parse_web_page_data.main.div
     datawarehouseid = datawarehouseid_tag['data-warehouse-id'] #get warehouse id
+    '''
+    datawarehouseid  = parse_web_page_data.find_all("div", id="company-info")[0]["data-warehouse-id"]
+
     
     quick_ratio_url = os.path.join(main_url,'api/company/'+datawarehouseid+'/quick_ratios/')#create api url
     quick_ratio_page = s.get(quick_ratio_url)#get the api webpage
