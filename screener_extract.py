@@ -57,56 +57,88 @@ columns_list = ['Trigger','M Cap','Sh Pr','PE','P/B','ROCE', 'ROE','ROA', 'DTE',
 main_url = 'https://www.screener.in/'
 login_sup = 'login/?'
 
+print("------------------------------------------------------------------------------")
+print('\n')
 print("Enter your file path:")
 file_path = input()
-print("->"+ file_path)
-
+print("------------------------------------------------------------------------------")
+print("File Path: "+ file_path)
+print("------------------------------------------------------------------------------")
 
 try:
     actual_file = pd.read_excel(file_path)
+    print("------------------------------------------------------------------------------")
     print("File successfuly uploaded.")
+    print("------------------------------------------------------------------------------")
 except FileNotFoundError:
+    print("------------------------------------------------------------------------------")
     print("File unavailable.Please place the file.")
+    print("------------------------------------------------------------------------------")
     sys.exit()
 except ValueError:
+    print("------------------------------------------------------------------------------")
     print("Unrecognized file format.Please provide the correct file.")
+    print("------------------------------------------------------------------------------")
     sys.exit()
 
 if(list(actual_file.loc[0][0:21])==columns_list):
-   print("No issues with file columns.Proceeding with data extraction")
-
+    print("------------------------------------------------------------------------------")
+    print("No issues with file columns.Proceeding with data extraction")
+    print("------------------------------------------------------------------------------")
 else:
-   print("File column names are incorrect, please upload the correct file and proceed")
-   sys.exit()
+    print("------------------------------------------------------------------------------")
+    print("File column names are incorrect, please upload the correct file and proceed")
+    print("------------------------------------------------------------------------------")
+    sys.exit()
 
 
 print("Enter your Screener User ID: ")
 user_id = input()
-print("->"+ user_id)
-
 print("Enter your Screener Password: ")
 pass_word = input()
-print("->"+ pass_word)
+
+print("------------------------------------------------------------------------------")
+print("Userid: "+ user_id)
+print("Pass: "+ pass_word)
+print("------------------------------------------------------------------------------")
 
 actual_file.columns=actual_file.loc[0]
-
 actual_file = actual_file.loc[:, actual_file.columns.notnull()]
-
 actual_file.index=[actual_file['Trigger']]
-
 actual_file.index.names = ['index']
-
-actual_file.drop(actual_file.index[:1],inplace=True)
+#actual_file.drop(actual_file.index[:1],inplace=True)
+actual_file = actual_file.drop(actual_file.index[:1])
+print("------------------------------------------------------------")
+print("File preprocessed successfully.")
+print("------------------------------------------------------------")
 
 search_list = list(actual_file["Trigger"])
-if(search_list==[]):
+
+for i in range (0,len(search_list)):
+    try:
+        if(pd.isna(search_list[i]+search_list[i+1]) == True):
+            search_list_final = search_list[0:i]
+            break
+    except TypeError:
+        pass
+    except IndexError:
+        pass
+
+if(search_list_final==[]):
+    print("------------------------------------------------------------------------------")
     print('Search Company Empty in file. Please upload the file with data.')
+    print("------------------------------------------------------------------------------")
     sys.exit()
 else:
-    search_list=[x for x in search_list if x==x]
-    print("{} Companies to extract".format(len(search_list)))
+    search_list_final=[x for x in search_list_final if x==x]
+    print('\n')
+    print("------------------------------------------------------------------------------")
+    print("{} Companies to extract".format(len(search_list_final)))
+    print("------------------------------------------------------------------------------")
 
+print("------------------------------------------------------------------------------")
 s=screener_login(main_url,login_sup,user_id,pass_word)
+print("------------------------------------------------------------------------------")
 
 ratio_value_list=[]
 counter1=[]
@@ -114,21 +146,29 @@ counter2=[]
 nodata=[]
 ratio_value_1up=[]
 
-for company in search_list:
+for company in search_list_final:
     if (len(counter1)==9):
         counter1=[]
         end = time.time()
         execution_time = (end - start)/60
+        print("------------------------------------------------------------------------------")
         print("Time taken: {} mins".format(execution_time))
         print("Started..........")
+        print("------------------------------------------------------------------------------")
     url_extn = 'company/'+company+'/consolidated/'
     get_webpage=s.get(os.path.join(main_url,url_extn))
     while(str(get_webpage)=='<Response [429]>'):
+        print("------------------------------------------------------------------------------")
         print("print-1")
         print("<Response [429]>': Cannot handle too may requests, wait for 20 seconds")
+        print("------------------------------------------------------------------------------")
         #time.sleep(20)
         countdown(20)
+        os.system('cls')
         print("Started..........")
+        print("------------------------------------------------------------------------------")
+        print(str(len(counter2))+" Companies extracted")
+        print("------------------------------------------------------------------------------")
         get_webpage=s.get(os.path.join(main_url,url_extn))
     if(str(get_webpage)=='<Response [404]>'):
         print(company+" not found")
@@ -151,15 +191,23 @@ for company in search_list:
         url_extn = 'company/'+company+'/'
         get_webpage=s.get(os.path.join(main_url,url_extn))
         if(str(get_webpage)=='<Response [404]>'):
+            print("------------------------------------------------------------------------------")
             print(company+" warehouseid could not found to extract quick ratios")
+            print("------------------------------------------------------------------------------")
             nodata.append(company)
             continue
         while(str(get_webpage) =='<Response [429]>'):
+            print("------------------------------------------------------------------------------") 
             print("print-2")
             print("<Response [429]>': Cannot handle too may requests, wait for 20 seconds")
+            print("------------------------------------------------------------------------------")
             #time.sleep(20)
             countdown(20)
-            print("Started..........")    
+            os.system('cls')
+            print("Started..........")
+            print("------------------------------------------------------------------------------")
+            print(str(len(counter2))+" Companies extracted")
+            print("------------------------------------------------------------------------------")
             get_webpage=s.get(os.path.join(main_url,url_extn))
     
     parse_web_page_data = BeautifulSoup(get_webpage.content, 'html.parser')
@@ -170,11 +218,16 @@ for company in search_list:
     quick_ratio_page = s.get(quick_ratio_url)#get the api webpage
     
     while(str(quick_ratio_page) =='<Response [429]>'):
+        print("------------------------------------------------------------------------------")
         print("print-3")
         print("<Response [429]>': Cannot handle too may requests, sleeping for 20 seconds")
+        print("------------------------------------------------------------------------------")
         #time.sleep(20)
         countdown(20)
-        print("Started..........")    
+        os.system('cls')
+        print("------------------------------------------------------------------------------")
+        print(str(len(counter2))+" Companies extracted")
+        print("------------------------------------------------------------------------------")
         quick_ratio_page = s.get(quick_ratio_url)
     
     quick_ratio_page_data = BeautifulSoup(quick_ratio_page.content, 'html.parser')#parse the webpage as html
@@ -182,7 +235,9 @@ for company in search_list:
     quick_ratio_items = quick_ratio_page_data.select(".name") #get the quick ratio names from webpage above (with html tags)
     quick_ratio_values = quick_ratio_page_data.select(".number") #get the quick ratio values from webpage above (with html tags)
     if(quick_ratio_items==[]):
+        print("------------------------------------------------------------------------------------------------")
         print("No quick/custom ratios were configured in Screener for {}.Exiting the program".format(company))
+        print("------------------------------------------------------------------------------------------------")
         sys.exit()
     profitloss_section=parse_web_page_data.select(".ranges-table") #get profitloss section from webpage
     cpg_ratio_sec = profitloss_section[1] #get CPG section
@@ -228,8 +283,10 @@ for company in search_list:
     if(len(actual_values)==len(actual_ratios)):
         for x in required_ratios.values():
             if x not in ratio_value.keys():
+                print("------------------------------------------------------------------------------------------------")
                 print(x+"ratio not available")
                 print("Check if you have configured the correct ratios in screener")
+                print("------------------------------------------------------------------------------------------------")
                 sys.exit()
             else:
                 v1=float(ratio_value['10 Yrs'])
@@ -245,12 +302,16 @@ for company in search_list:
         ratio_value.update(cal_ratio)
         ratio_value_1up.append({company:ratio_value})
     else:
+        print("------------------------------------------------------------------------------------------------")
         print("Something wrong with values extracted.Kindly check screener")
-    print(len(counter1),str(len(counter2))+" Companies extracted",company)
-    
+        print("------------------------------------------------------------------------------------------------")
+    print(len(counter1),' : ',str(len(counter2))+" Companies extracted",company)
+os.system('cls')
+print("------------------------------------------------------------------------------------------------")    
+print(str(len(counter2))+" Companies extracted",company)
 print('Data could not be found for these companies' + str(nodata))    
+print("------------------------------------------------------------------------------------------------")
 ratio_value_final=ratio_value_1up
-
 
 for x in ratio_value_final:
     company=list(x.keys())[0]
@@ -271,19 +332,27 @@ actual_file.columns=new_headers
 
 try:
     actual_file.to_excel(file_path,index=False)
+    print("------------------------------------------------------------------------------------------------")
     print("Extraction completed and file saved here: " + file_path)
+    print("------------------------------------------------------------------------------------------------")
 except PermissionError:
     print("File with the same name is open, please close the file.You have 20 seconds")
     #time.sleep(10)
     countdown(20)
     try:
         actual_file.to_excel(file_path,index=False)
+        print("------------------------------------------------------------------------------------------------")
         print("Extraction completed and file saved here: " + file_path)
+        print("------------------------------------------------------------------------------------------------")
     except PermissionError:
+        print("------------------------------------------------------------------------------------------------")
         print("File is still open. Exiting the program.........")
-    
-    
+        print("------------------------------------------------------------------------------------------------")
+
 end = time.time()
 total_execution_time = (end - start)/60
+print("------------------------------------------------------------------------------------------------")
 print("Process Completed. Total time taken {} mins.".format(total_execution_time))
+print("------------------------------------------------------------------------------------------------")
 sys.exit
+
