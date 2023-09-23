@@ -177,7 +177,7 @@ for company in search_list_final:
         print("Time taken: {} mins".format(execution_time))
         print("Started..........")
         print("------------------------------------------------------------------------------")
-    url_extn = 'company/'+company+'/consolidated/'
+    url_extn = 'company/'+ company  #+'/consolidated/'
 
     get_webpage=s.get(os.path.join(main_url,url_extn))
     print(os.path.join(main_url,url_extn))
@@ -274,17 +274,22 @@ for company in search_list_final:
         print("No quick/custom ratios were configured in Screener for {}.Exiting the program".format(company))
         print("------------------------------------------------------------------------------------------------")
         sys.exit()
+
     profitloss_section=parse_web_page_data.select(".ranges-table") #get profitloss section from webpage
+
     cpg_ratio_sec = profitloss_section[1] #get CPG section
     cpg_ratio_dataset=cpg_ratio_sec.find_all("td") #extract CPG data with html tags
     cpg_ratio_items=[] #intialize empty array
+
     for item in cpg_ratio_dataset: # loop to extract data and remove html tags from each item
         item=(item.string).replace('%','')
         if(item==''):
             item='0'
         cpg_ratio_items.append(item)
+
     cpg_ratios = [cpg_ratio_items[0],cpg_ratio_items[2],cpg_ratio_items[4],cpg_ratio_items[6]] #get cpg ratios from items array
     cpg_values = [float(cpg_ratio_items[1]),float(cpg_ratio_items[3]),float(cpg_ratio_items[5]),float(cpg_ratio_items[7])] #get cpg values from items array
+
     default_ratio_items.extend(quick_ratio_items)
     default_ratio_values.extend(quick_ratio_values)
     #actual_ratios = ['Trigger']
