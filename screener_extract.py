@@ -6,6 +6,8 @@ from datetime import datetime as dt
 import sys
 import time
 import openpyxl
+import shutil
+
 
 start = time.time()
 
@@ -35,7 +37,7 @@ def screener_login(url,loginextn,userid,user_password):
     print(s)
     return s
 
-required_ratios = {'Market Cap':'M Cap'
+required_ratios = {'Market Cap':'M Cap (in Cr.)'
                    ,'Current Price':'Sh Pr'
                    ,'Stock P/E':'PE'
                    ,'Price to book value':'P/B'
@@ -52,7 +54,7 @@ required_ratios = {'Market Cap':'M Cap'
                    ,'3 Years:':'3 Yrs'
                    ,'TTM:':'TTM'}
 
-columns_list = ['Trigger','M Cap','Sh Pr','PE','P/B','ROCE', 'ROE','ROA', 'DTE','OPM', 'EY','PEG', 'DY','10 Yrs','5 Yrs','3 Yrs','TTM',10.0,5.0,3.0,'TTMc']
+columns_list = ['Trigger','M Cap (in Cr.)','Sh Pr','PE','P/B','ROCE', 'ROE','ROA', 'DTE','OPM', 'EY','PEG', 'DY','10 Yrs','5 Yrs','3 Yrs','TTM',10.0,5.0,3.0,'TTMc']
 
 main_url = 'https://www.screener.in/'
 login_sup = 'login/?'
@@ -65,12 +67,18 @@ print("-------------------------------------------------------------------------
 print("File Path: "+ file_path)
 print("------------------------------------------------------------------------------")
 
+# input file backup
+to_path = file_path[0:len(file_path)-5]+"_"+"backed_up_on"+str(dt.today().date())+".xlsx"
+shutil.copy(file_path, to_path)
+print("------------------------------------------------------------------------------")
+print("File backup successful.",to_path)
+print("------------------------------------------------------------------------------")
+
+
 try:
     actual_file = pd.read_excel(file_path)
-    to_path = file_path[0:len(file_path)-5]+"_"+"backed_up_on"+str(dt.today().date())+".xlsx"
-    actual_file.to_excel(to_path)
     print("------------------------------------------------------------------------------")
-    print("File successfuly uploaded.")
+    print("File successfully uploaded.")
     print("------------------------------------------------------------------------------")
 except FileNotFoundError:
     print("------------------------------------------------------------------------------")
@@ -116,11 +124,23 @@ print("------------------------------------------------------------")
 
 search_list = list(actual_file["Trigger"])
 
+'''
 for i in range (0,len(search_list)):
     try:
         if(pd.isna(search_list[i]+search_list[i+1]) == True):
             search_list_final = search_list[0:i]
             break
+    except TypeError:
+        pass
+    except IndexError:
+        pass
+'''
+
+search_list_final = []
+for i in range (0,len(search_list)):
+    try:
+        if(pd.isna(search_list[i]) == False):
+            search_list_final.append(search_list[i])
     except TypeError:
         pass
     except IndexError:
@@ -158,7 +178,10 @@ for company in search_list_final:
         print("Started..........")
         print("------------------------------------------------------------------------------")
     url_extn = 'company/'+company+'/consolidated/'
+
     get_webpage=s.get(os.path.join(main_url,url_extn))
+    print(os.path.join(main_url,url_extn))
+
     while(str(get_webpage)=='<Response [429]>'):
         print("------------------------------------------------------------------------------")
         print("print-1")
@@ -350,7 +373,7 @@ try:
 except PermissionError:
     print("File with the same name is open, please close the file.You have 20 seconds")
     #time.sleep(10)
-    countdown(20)
+    countdown(60)
     try:
         actual_file.to_excel(file_path,index=False)
         print("------------------------------------------------------------------------------------------------")
