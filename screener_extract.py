@@ -336,14 +336,14 @@ for company in search_list_final:
     default_ratio_values.extend(quick_ratio_values)
     #actual_ratios = ['Trigger']
     
-    actual_ratios = []
+    actual_ratios = [] # empty array for ratios labels
     for item in default_ratio_items:
         item=(item.string).replace('\n','').strip()
         actual_ratios.append(item)
     actual_ratios.extend(cpg_ratios)
     #actual_values=[company]
-    
-    actual_values=[]
+     
+    actual_values=[] # empty array for values
     for value in default_ratio_values:
         value = value.string
         if ((value==None) or (value=='')):
@@ -389,7 +389,7 @@ for company in search_list_final:
                            ,3.0 : 0 if v3==0 else v/v3
                            ,'TTMc': 0 if v4==0 else v/v4}
         ratio_value.update(cal_ratio)
-        ratio_value_1up.append({company:ratio_value})
+        ratio_value_1up.append({company:ratio_value}) # list of dictionaries of ratios by companies)
     else:
         print("------------------------------------------------------------------------------------------------")
         print("Something wrong with values extracted.Kindly check screener")
@@ -400,13 +400,13 @@ print("-------------------------------------------------------------------------
 print(str(len(counter2))+" Companies extracted",company)
 print('Data could not be found for these companies' + str(nodata))    
 print("------------------------------------------------------------------------------------------------")
-ratio_value_final=ratio_value_1up
+ratio_value_final=ratio_value_1up # list of dictionaries of ratios by companies)
 
 for x in ratio_value_final:
     company=list(x.keys())[0]
     values=list(x.values())[0]
-    actual_file.loc[company,list(values.keys())]=list(values.values())
-    actual_file.loc[company,'Last Updated']=dt.date(dt.today())
+    actual_file.loc[company,list(values.keys())]=list(values.values()) # for each row label (Trigger) update the values
+    actual_file.loc[company,'Last Updated']=dt.date(dt.today())# for each row label (Trigger) update today's date
 
 actual_file = actual_file.reset_index()
 
