@@ -1,3 +1,7 @@
+
+
+#-------------importing libraries------------
+
 import requests
 import os
 from bs4 import BeautifulSoup
@@ -9,17 +13,24 @@ import openpyxl
 import shutil
 
 
-start = time.time()
+start = time.time()  # timer to check execution time
 
+# function to define countdown timer
+-------------------------------------
+
+# time_sec - seconds you want countdown for.
 def countdown(time_sec):
-    while time_sec:
-        mins, secs = divmod(time_sec, 60)
-        timeformat = '{:02d}:{:02d}'.format(mins, secs)
-        print(timeformat, end='\r')
-        time.sleep(1)
+    while time_sec: # no need to specify condition; when time_sec reaches 0 - becomes False; 0 represents False
+        mins, secs = divmod(time_sec, 60)   # gives the remainder(min) and quotient(secs)
+        timeformat = '{:02d}:{:02d}'.format(mins, secs) # formatting 
+        print(timeformat, end='\r') # move the cursor or print head back to the beginning of the current line and print time
+        time.sleep(1) # 1 second delay is used to avoid instant printing.
         time_sec -= 1
     print("done")
 
+
+# function to login screener.com 
+-------------------------------------
 def screener_login(url,loginextn,userid,user_password):
     s=requests.Session()
     main_url = url
@@ -28,14 +39,18 @@ def screener_login(url,loginextn,userid,user_password):
     resp=s.get(home_url)
     if 'csrftoken' in resp.cookies:
         # Django 1.6 and up
-        csrftoken = resp.cookies['csrftoken']
+        csrftoken = resp.cookies['csrftoken'] # uses csrftoken  CSRF (Cross Site Request Forgery) 
     else:
         # older versions
         csrftoken = resp.cookies['csrf']
-    login_data = dict(username=userid, password=user_password, csrfmiddlewaretoken=csrftoken, next='/')
-    r = s.post(home_url, data=login_data, headers=dict(Referer=home_url))
+    login_data = dict(username=userid, password=user_password, csrfmiddlewaretoken=csrftoken, next='/') # creating a dictionary of login keys and inputs
+    r = s.post(home_url, data=login_data, headers=dict(Referer=home_url)) # returns 
     print(s)
-    return s
+    return s  #return the sessions object
+
+
+#required ratios from screener
+#mapping dictionary label in website and column name in file
 
 required_ratios = {'Market Cap':'M Cap (in Cr.)'
                    ,'Current Price':'Sh Pr'
@@ -61,22 +76,23 @@ login_sup = 'login/?'
 
 print("------------------------------------------------------------------------------")
 print('\n')
-print("Enter your file path:")
-file_path = input()
+print("Enter your file path:")                 
+file_path = input()                     # file path of the input/output file
 print("------------------------------------------------------------------------------")
 print("File Path: "+ file_path)
 print("------------------------------------------------------------------------------")
 
-# input file backup
+# taking a backup of input file, because the original file will be overwritten
+
 to_path = file_path[0:len(file_path)-5]+"_"+"backed_up_on"+str(dt.today().date())+".xlsx"
-shutil.copy(file_path, to_path)
+shutil.copy(file_path, to_path) # copy the file from source to a destination directory (which is the same in this case)
 print("------------------------------------------------------------------------------")
 print("File backup successful.",to_path)
 print("------------------------------------------------------------------------------")
 
 
 try:
-    actual_file = pd.read_excel(file_path)
+    actual_file = pd.read_excel(file_path) #reading the excel file
     print("------------------------------------------------------------------------------")
     print("File successfully uploaded.")
     print("------------------------------------------------------------------------------")
@@ -84,14 +100,14 @@ except FileNotFoundError:
     print("------------------------------------------------------------------------------")
     print("File unavailable.Please place the file.")
     print("------------------------------------------------------------------------------")
-    sys.exit()
+    sys.exit() #exiting the program
 except ValueError:
     print("------------------------------------------------------------------------------")
     print("Unrecognized file format.Please provide the correct file.")
     print("------------------------------------------------------------------------------")
-    sys.exit()
+    sys.exit() #exiting the program
 
-if(list(actual_file.loc[0][0:21])==columns_list):
+if(list(actual_file.loc[0][0:21])==columns_list): #checking the columns as per columns list
     print("------------------------------------------------------------------------------")
     print("No issues with file columns.Proceeding with data extraction")
     print("------------------------------------------------------------------------------")
@@ -99,7 +115,7 @@ else:
     print("------------------------------------------------------------------------------")
     print("File column names are incorrect, please upload the correct file and proceed")
     print("------------------------------------------------------------------------------")
-    sys.exit()
+    sys.exit() #exiting the program
 
 
 print("Enter your Screener User ID: ")
@@ -112,17 +128,23 @@ print("Userid: "+ user_id)
 print("Pass: "+ pass_word)
 print("------------------------------------------------------------------------------")
 
-actual_file.columns=actual_file.loc[0]
-actual_file = actual_file.loc[:, actual_file.columns.notnull()]
-actual_file.index=[actual_file['Trigger']]
-actual_file.index.names = ['index']
+actual_file.columns=actual_file.loc[0] # get the first row of the table and make it as column headers
+
+actual_file = actual_file.loc[:, actual_file.columns.notnull()] # checks and brings the values for non null columns
+
+actual_file.index=[actual_file['Trigger']] # Trigger is nothing but the name of the companies to extract data from and is being changed to index.
+
+actual_file.index.names = ['index'] # changing the name of the Index to "index"
+
 #actual_file.drop(actual_file.index[:1],inplace=True)
-actual_file = actual_file.drop(actual_file.index[:1])
+
+actual_file = actual_file.drop(actual_file.index[:1]) # dropping the first row which is the same as the header name
+
 print("------------------------------------------------------------")
 print("File preprocessed successfully.")
 print("------------------------------------------------------------")
 
-search_list = list(actual_file["Trigger"])
+search_list = list(actual_file["Trigger"]) # getting the trigger(company codes to search as list)
 
 '''
 for i in range (0,len(search_list)):
@@ -136,6 +158,8 @@ for i in range (0,len(search_list)):
         pass
 '''
 
+# The trigger column contains NaN values and have to be removed
+
 search_list_final = []
 for i in range (0,len(search_list)):
     try:
@@ -146,7 +170,9 @@ for i in range (0,len(search_list)):
     except IndexError:
         pass
 
-if(search_list_final==[]):
+# validation if the search list is empty
+
+if(search_list_final==[]): 
     print("------------------------------------------------------------------------------")
     print('Search Company Empty in file. Please upload the file with data.')
     print("------------------------------------------------------------------------------")
@@ -159,7 +185,7 @@ else:
     print("------------------------------------------------------------------------------")
 
 print("------------------------------------------------------------------------------")
-s=screener_login(main_url,login_sup,user_id,pass_word)
+s=screener_login(main_url,login_sup,user_id,pass_word)  # logging in to screener website
 print("------------------------------------------------------------------------------")
 
 ratio_value_list=[]
@@ -167,6 +193,9 @@ counter1=[]
 counter2=[]
 nodata=[]
 ratio_value_1up=[]
+
+# for every company code in the list the ratios or data is extracted from screener page or the company
+# this block is to extract the basic ration from the home page
 
 for company in search_list_final:
     if (len(counter1)==9):
@@ -182,7 +211,7 @@ for company in search_list_final:
     get_webpage=s.get(os.path.join(main_url,url_extn))
     print(os.path.join(main_url,url_extn))
 
-    while(str(get_webpage)=='<Response [429]>'):
+    while(str(get_webpage)=='<Response [429]>'):       # since only limited no. of requests are allowed to Screener, we are creating a 20 sec time out for each request limit and then running the code.
         print("------------------------------------------------------------------------------")
         print("print-1")
         print("<Response [429]>': Cannot handle too may requests, wait for 20 seconds")
@@ -195,7 +224,7 @@ for company in search_list_final:
         print(str(len(counter2))+" Companies extracted")
         print("------------------------------------------------------------------------------")
         get_webpage=s.get(os.path.join(main_url,url_extn))
-    if(str(get_webpage)=='<Response [404]>'):
+    if(str(get_webpage)=='<Response [404]>'):         # if no data/page is found for the company no data is returned.
         print(company+" not found")
         nodata.append(company)
         continue
@@ -207,22 +236,31 @@ for company in search_list_final:
     default_ratio_section = parse_web_page_data.find(id="top-ratios") #get the default ratio data section
     default_ratio_items = default_ratio_section.select(".name") #get the default ratio names from webpage above (with html tags)
     default_ratio_values = default_ratio_section.select(".number") #get the default ratio values from webpage above (with html tags)
-    
-    #quick ratios
-        #---old code---
+
+    # this block is to extract the quick ratios which are not in home page and have to be extracted using datawarehouseid api
+    #------------------------------------------------------------------------------------------------------------------    
+    #-----------------------------------------------quick ratios-------------------------------------------------------
+
+    #---old code---
     '''
     datawarehouseid_tag=parse_web_page_data.main.div
     datawarehouseid = datawarehouseid_tag['data-warehouse-id'] #get warehouse id
     '''
-        # new code
+    #--------------
+    
+    # new code
+
+     # trying to get the datawarehouseid from the consolidated webpage data
+     
     datawarehouseid  = parse_web_page_data.find_all("div", id="company-info")[0]["data-warehouse-id"]
     
-    if (datawarehouseid=='None'):
+    # if no datawarehouseid is found from the consolidated webpage data then using the normal web page url to extract the datawarehouse id
+    if (datawarehouseid=='None'): 
         url_extn = 'company/'+company+'/'
         get_webpage=s.get(os.path.join(main_url,url_extn))
         if(str(get_webpage)=='<Response [404]>'):
             print("------------------------------------------------------------------------------")
-            print(company+" warehouseid could not found to extract quick ratios")
+            print(company+" warehouseid could not be found to extract quick ratios")
             print("------------------------------------------------------------------------------")
             nodata.append(company)
             continue
@@ -239,6 +277,7 @@ for company in search_list_final:
             print(str(len(counter2))+" Companies extracted")
             print("------------------------------------------------------------------------------")
             get_webpage=s.get(os.path.join(main_url,url_extn))
+
     
     parse_web_page_data = BeautifulSoup(get_webpage.content, 'html.parser')
         #---old code---
@@ -246,6 +285,8 @@ for company in search_list_final:
     datawarehouseid_tag=parse_web_page_data.main.div
     datawarehouseid = datawarehouseid_tag['data-warehouse-id'] #get warehouse id
     '''
+
+    # 
     datawarehouseid  = parse_web_page_data.find_all("div", id="company-info")[0]["data-warehouse-id"]
 
     
@@ -279,6 +320,7 @@ for company in search_list_final:
 
     cpg_ratio_sec = profitloss_section[1] #get CPG section
     cpg_ratio_dataset=cpg_ratio_sec.find_all("td") #extract CPG data with html tags
+
     cpg_ratio_items=[] #intialize empty array
 
     for item in cpg_ratio_dataset: # loop to extract data and remove html tags from each item
@@ -321,11 +363,11 @@ for company in search_list_final:
         actual_values.pop(HL_index+1)
         actual_values.pop(HL_index+1)
         
-    ratio_value = {}
+    ratio_value = {} # initializing empty dictionary
     for i in range(0,len(actual_ratios)):
         for ratio in required_ratios:
             if (ratio==actual_ratios[i]):
-                ratio_value.update({required_ratios[ratio]:actual_values[i]})
+                ratio_value.update({required_ratios[ratio]:actual_values[i]}) # creating a ratio and value dictionary
     
     if(len(actual_values)==len(actual_ratios)):
         for x in required_ratios.values():
@@ -377,6 +419,7 @@ actual_file.index = actual_file.index + 1
 actual_file = actual_file.sort_index()
 actual_file.columns=new_headers
 
+# validation if file is open
 try:
     actual_file.to_excel(file_path,index=False)
     print("------------------------------------------------------------------------------------------------")
